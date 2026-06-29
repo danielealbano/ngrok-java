@@ -51,6 +51,17 @@ class Runtime {
      *                          to load
      */
     public static void load() {
+        // On Android the native library is packaged under lib/<abi>/ and is loadable by name from
+        // the application's native library directory; prefer that. When it is not available via the
+        // library path (e.g. the host JVM during tests), fall back to extracting the library that is
+        // bundled as a classpath resource.
+        try {
+            System.loadLibrary("ngrok_java");
+            return;
+        } catch (UnsatisfiedLinkError e) {
+            // Not on java.library.path; fall through to the classpath-resource extraction below.
+        }
+
         String filename = getLibname();
         String tempDir = System.getProperty("java.io.tmpdir");
         File temporaryDir = new File(tempDir, "libngrok_" + System.nanoTime());
